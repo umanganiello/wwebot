@@ -1,4 +1,4 @@
-package um.wwebot;
+package um.wwebot.test;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
