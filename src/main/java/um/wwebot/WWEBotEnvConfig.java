@@ -21,5 +21,5 @@ public class WWEBotEnvConfig {
 			log.info("BOT_TOKEN found");
 			return botToken;
 		}
-	}
+	}	
 }
