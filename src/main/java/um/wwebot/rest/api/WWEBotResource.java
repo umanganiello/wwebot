@@ -48,7 +48,7 @@ public class WWEBotResource {
 		sections.add(Pair.of("SmackDown", "3"));
 		sections.add(Pair.of("205 Live", "4"));
 		sections.add(Pair.of("NXT", "5"));
-//		sections.add(Pair.of("NXTUK", "6"));
+		sections.add(Pair.of("NXT UK", "6"));
 		log.info("WWEBot resource started");     
 	}
 
@@ -97,6 +97,7 @@ public class WWEBotResource {
 		
 		switch(cmd) {
 		case CHAMPIONS:
+			log.info("Recognized command {}", WWEBotCommand.CHAMPIONS.getCmdPath());
 			StringBuilder sb = new StringBuilder();
 			
 			sections.forEach(s -> {

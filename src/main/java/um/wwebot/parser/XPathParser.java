@@ -3,6 +3,7 @@ package um.wwebot.parser;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -24,6 +25,15 @@ import um.wwebot.model.Champion;
 @Slf4j
 @Component
 public class XPathParser implements WWEBotParser{
+	
+	private final List<String> xpathChampionChecks;
+	
+	public XPathParser() {
+		xpathChampionChecks = new LinkedList<>();
+		xpathChampionChecks.add("/div/table/tbody/tr[count(preceding-sibling::*) = <rowNumber>]/td[count(preceding-sibling::*) = 2]/a/text()");
+		xpathChampionChecks.add("/div/table/tbody/tr[count(preceding-sibling::*) = <rowNumber>]/td[count(preceding-sibling::*) = 1]/a/text()");
+		xpathChampionChecks.add("/div/table/tbody/tr[count(preceding-sibling::*) = <rowNumber>]/td[count(preceding-sibling::*) = 2]/text()");
+	}
 
 	@Override
 	@SneakyThrows
@@ -31,9 +41,6 @@ public class XPathParser implements WWEBotParser{
 		log.info("Parsing section {}", sectionName);
 		log.debug("Parsing section: \n{}", section);
 		
-		// Titles: /div/table/tbody/tr/td[count(preceding-sibling::*) = 0]/a/text()
-		// Champions: /div/table/tbody/tr/td[count(preceding-sibling::*) = 2]/a/text()
-
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         factory.setNamespaceAware(true); 
         DocumentBuilder builder = factory.newDocumentBuilder();
@@ -43,39 +50,75 @@ public class XPathParser implements WWEBotParser{
         XPathFactory xpathfactory = XPathFactory.newInstance();
         XPath xpath = xpathfactory.newXPath();
         
-        /*Titles*/
+        /* Titles */
+        /* XPath: /div/table/tbody/tr/td[count(preceding-sibling::*) = 0]/a/text() */
         XPathExpression titlesExpr = xpath.compile("/div/table/tbody/tr/td[count(preceding-sibling::*) = 0]/a/text()");
         Object titlesResult = titlesExpr.evaluate(doc, XPathConstants.NODESET);
         NodeList titleNodes = (NodeList) titlesResult;
-        for (int i=0; i<titleNodes.getLength(); i++)
-        	log.debug("Title: {}", titleNodes.item(i));
+     
+        /* Champions */
+        List<Champion> champions = new LinkedList<>();
+
+        /*The page has different structure for each section.*/
+        /* Case 1: Table structure: photo-name. XPath: "/div/table/tbody/tr/td[count(preceding-sibling::*) = 2]/a/text()" */
+        /* Case 2: Table structure: name-photo. XPath: "/div/table/tbody/tr/td[count(preceding-sibling::*) = 1]/a/text()" */
+        /* Case 3: Champion name without his own page (no <a>, just plain text). XPath: "/div/table/tbody/tr/td[count(preceding-sibling::*) = 2]/text()" */
         
-        /*Champions*/
-        XPathExpression championsExpr = xpath.compile("/div/table/tbody/tr/td[count(preceding-sibling::*) = 2]/a/text()");
+        for (int i=1; i<=titleNodes.getLength(); i++){ //avoids header row
+        	String titleName = titleNodes.item(i-1).getTextContent();
+        	
+        	String championName = null;
+        	
+        	for(String check: xpathChampionChecks) {
+        		String caseExpr = check.replace("<rowNumber>", ""+i);
+        		String checkResult = checkCase(caseExpr, xpath, doc, titleNodes);
+        		
+        		if(checkResult != null && !checkResult.isEmpty()) {
+        			championName = checkResult;
+        			break;
+        		}
+        	}
+        	
+        	if(championName == null) {
+        		log.error("Cannot extract champion for title {} ", titleName);
+        		throw new IllegalStateException("Cannot extract champion for title "+titleName);
+        	}
+        	
+        	Champion foundChampion = new Champion(championName, titleName);
+        	champions.add(foundChampion);
+        	log.debug("Found Champion -> {}", foundChampion);
+        }
+        
+        log.info("Returning champions for section {}", sectionName);
+        return champions;
+	}
+
+	
+	@SneakyThrows
+	private String checkCase(String xpathExpr, XPath xpath, Document doc, NodeList titleNodes) {
+		XPathExpression championsExpr = xpath.compile(xpathExpr);
         Object championsResult = championsExpr.evaluate(doc, XPathConstants.NODESET);
         NodeList championsNodes = (NodeList) championsResult;
-        if(championsNodes.getLength() == 0) {
-        	//try name-photo inverted
-        	championsExpr = xpath.compile("/div/table/tbody/tr/td[count(preceding-sibling::*) = 1]/a/text()");
-        	championsResult = championsExpr.evaluate(doc, XPathConstants.NODESET);
-        	championsNodes = (NodeList) championsResult;
-        }
-        for (int i=0; i<championsNodes.getLength(); i++)
-        	log.debug("Champion: {}", championsNodes.item(i));
         
-        if(titleNodes.getLength() != championsNodes.getLength()) {
-        	//TODO: try champion name without his own page (no <a>)
+        List<String> foundNames = new ArrayList<>();
+        
+        for(int i=0; i<championsNodes.getLength(); i++) {
+    		String nodeText = championsNodes.item(i).getTextContent();
+    		nodeText = nodeText.trim().replace("\n", "");
         	
-        	log.error("#titles != #champions! for section {}: #titles={} #champions={}", sectionName, titleNodes.getLength(), championsNodes.getLength());
-        	throw new IllegalStateException("#titles != #champions!");
+    		if(!nodeText.isEmpty())
+    			foundNames.add(championsNodes.item(i).getTextContent());
         }
-        else {
-        	List<Champion> champions = new LinkedList<>();
+        
+        if(foundNames.size() == 0) {
+        	return null;
+        }
+        
+        if(foundNames.size() > 1) {
+        	log.error("Too many elements found for expr:'{}', expected=1, found={}", xpathExpr, foundNames.size());
+        	throw new IllegalStateException("Too many elements found for expr:"+xpathExpr+". Found "+foundNames.size()+" elements");
+        }
         	
-            for (int i = 0; i < titleNodes.getLength(); i++) {
-                champions.add(new Champion(championsNodes.item(i).getTextContent(), titleNodes.item(i).getTextContent()));
-            }
-            return champions;
-        }
+    	return foundNames.get(0);
 	}
 }
