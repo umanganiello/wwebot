@@ -100,6 +100,7 @@ public class WWEBotResource {
 			log.info("Recognized command {}", WWEBotCommand.CHAMPIONS.getCmdPath());
 			StringBuilder sb = new StringBuilder();
 			
+			//TODO: Optimization: single API call
 			sections.forEach(s -> {
 				sb.append("\n");
 				sb.append(s.getLeft());
