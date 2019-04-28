@@ -18,6 +18,7 @@ import com.jayway.jsonpath.JsonPath;
 
 import lombok.extern.slf4j.Slf4j;
 import um.wwebot.model.Champion;
+import um.wwebot.model.Event;
 import um.wwebot.model.IncomingMessage;
 import um.wwebot.model.OutgoingMessage;
 import um.wwebot.model.WWEBotCommand;
@@ -38,17 +39,19 @@ public class WWEBotResource {
 	@Autowired
 	private WWEBotParser parser;
 	
-	private final List<Pair<String, String>> sections; //Wikipedia page section ids for each roster table
+	private final List<Pair<String, String>> showsSections; //Wikipedia page section ids for each roster table
 
 	private final String championsWikipediaPage = "List_of_current_champions_in_WWE";
-
+	private final String eventsWikipediaPage = "List_of_WWE_pay-per-view_and_WWE_Network_events";
+	private final String upcomingEventsWikipediaSectionNumber = "41";
+	
 	public WWEBotResource(){
-		sections = new LinkedList<>();
-		sections.add(Pair.of("RAW", "2"));
-		sections.add(Pair.of("SmackDown", "3"));
-		sections.add(Pair.of("205 Live", "4"));
-		sections.add(Pair.of("NXT", "5"));
-		sections.add(Pair.of("NXT UK", "6"));
+		showsSections = new LinkedList<>();
+		showsSections.add(Pair.of("RAW", "2"));
+		showsSections.add(Pair.of("SmackDown", "3"));
+		showsSections.add(Pair.of("205 Live", "4"));
+		showsSections.add(Pair.of("NXT", "5"));
+		showsSections.add(Pair.of("NXT UK", "6"));
 		log.info("WWEBot resource started");     
 	}
 
@@ -95,13 +98,15 @@ public class WWEBotResource {
 			return response;
 		}
 		
+		StringBuilder sb;
+		
 		switch(cmd) {
 		case CHAMPIONS:
 			log.info("Recognized command {}", WWEBotCommand.CHAMPIONS.getCmdPath());
-			StringBuilder sb = new StringBuilder();
+			sb = new StringBuilder();
 			
 			//TODO: Optimization: single API call
-			sections.forEach(s -> {
+			showsSections.forEach(s -> {
 				sb.append("\n");
 				sb.append(s.getLeft());
 				sb.append("\n");
@@ -114,7 +119,19 @@ public class WWEBotResource {
 			response.setText(sb.toString());
 			break;
 		case NEXT_PPV:
-			response.setText("Command not supported yet."); //TODO
+			log.info("Recognized command {}", WWEBotCommand.NEXT_PPV.getCmdPath());
+			sb = new StringBuilder();
+			
+			String upcomingEventsHTML = wikipediaClient.getSection(eventsWikipediaPage, upcomingEventsWikipediaSectionNumber);
+			List<Event> nextEvents = parser.getNextEventsFromSection(upcomingEventsHTML, 1);
+			
+			nextEvents.forEach(e -> {
+				sb.append("\n");
+				sb.append(e);
+				sb.append("\n");
+			});
+			
+			response.setText(sb.toString());
 			break;
 		case TITLE_HOLDERS:
 			response.setText("Command not supported yet."); //TODO

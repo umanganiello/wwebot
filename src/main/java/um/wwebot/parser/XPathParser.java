@@ -21,6 +21,7 @@ import org.w3c.dom.NodeList;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import um.wwebot.model.Champion;
+import um.wwebot.model.Event;
 
 @Slf4j
 @Component
@@ -46,6 +47,7 @@ public class XPathParser implements WWEBotParser{
         DocumentBuilder builder = factory.newDocumentBuilder();
         InputStream is = new ByteArrayInputStream(section.getBytes(StandardCharsets.UTF_8));
         Document doc = builder.parse(is);
+        is.close();
  
         XPathFactory xpathfactory = XPathFactory.newInstance();
         XPath xpath = xpathfactory.newXPath();
@@ -120,5 +122,45 @@ public class XPathParser implements WWEBotParser{
         }
         	
     	return foundNames.get(0);
+	}
+
+	@Override
+	@SneakyThrows
+	public List<Event> getNextEventsFromSection(String section, int noOfEventsToFetch) {
+		log.debug("Parsing next event section: \n{}", section);
+		
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        factory.setNamespaceAware(true); 
+        DocumentBuilder builder = factory.newDocumentBuilder();
+        InputStream is = new ByteArrayInputStream(section.getBytes(StandardCharsets.UTF_8));
+        Document doc = builder.parse(is);
+        is.close();
+ 
+        XPathFactory xpathfactory = XPathFactory.newInstance();
+        XPath xpath = xpathfactory.newXPath();
+        
+        String nextEventLineBaseXPathExpr;
+        List<Event> nextEventsList = new LinkedList<>();
+        
+        for(int i=1; i<=noOfEventsToFetch; i++) {
+        	nextEventLineBaseXPathExpr = "/div/table[count(preceding-sibling::*) = 3]/tbody/tr[count(preceding-sibling::*) = "+i+"]";
+        	
+            XPathExpression eventDateExpr = xpath.compile(nextEventLineBaseXPathExpr+"/td[count(preceding-sibling::*) = 0]/span/text()");
+            String eventDate = (String) eventDateExpr.evaluate(doc, XPathConstants.STRING);
+            
+            XPathExpression eventNameExpr = xpath.compile(nextEventLineBaseXPathExpr+"/td[count(preceding-sibling::*) = 1]/a/text()");
+            String eventName = (String) eventNameExpr.evaluate(doc, XPathConstants.STRING);
+            
+            XPathExpression eventVenueExpr = xpath.compile(nextEventLineBaseXPathExpr+"/td[count(preceding-sibling::*) = 2]/a/text()");
+            String eventVenue = (String) eventVenueExpr.evaluate(doc, XPathConstants.STRING);
+  
+            XPathExpression eventLocationExpr = xpath.compile(nextEventLineBaseXPathExpr+"/td[count(preceding-sibling::*) = 3]/a/text()");
+            String eventLocation = (String) eventLocationExpr.evaluate(doc, XPathConstants.STRING);
+
+            log.debug("Found event date={} name={} venue={} location={}", eventDate, eventName, eventVenue, eventLocation);
+            nextEventsList.add(new Event(eventName, eventDate, eventVenue, eventLocation));
+        }
+        
+        return nextEventsList;
 	}
 }
