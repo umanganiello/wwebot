@@ -107,13 +107,14 @@ public class WWEBotResource {
 			
 			//TODO: Optimization: single API call
 			showsSections.forEach(s -> {
-				sb.append("\n");
-				sb.append(s.getLeft());
-				sb.append("\n");
 				String sectionHTML = wikipediaClient.getSection(championsWikipediaPage, s.getRight());
 				List<Champion> champions = parser.getChampionsFromSection(sectionHTML, s.getLeft());
-				sb.append(champions.stream().map(Champion::toString).collect(Collectors.joining("\n")));
-				sb.append("\n");
+				
+				sb.append("\n")
+				.append(s.getLeft())
+				.append("\n")
+				.append(champions.stream().map(Champion::toString).collect(Collectors.joining("\n")))
+				.append("\n");
 			});
 			
 			response.setText(sb.toString());
@@ -126,14 +127,15 @@ public class WWEBotResource {
 			List<Event> nextEvents = parser.getNextEventsFromSection(upcomingEventsHTML, 1);
 			
 			nextEvents.forEach(e -> {
-				sb.append("\n");
-				sb.append(e);
-				sb.append("\n");
+				sb.append("\n")
+				.append(e)
+				.append(" /ppvdetails");
+//				.append("\n");
 			});
 			
 			response.setText(sb.toString());
 			break;
-		case TITLE_HOLDERS:
+		default:
 			response.setText("Command not supported yet."); //TODO
 			break;
 		}
