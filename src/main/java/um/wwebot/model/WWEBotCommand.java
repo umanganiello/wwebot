@@ -3,7 +3,7 @@ package um.wwebot.model;
 public enum WWEBotCommand {
 	CHAMPIONS("/champions"),
 	NEXT_PPV("/nextppv"),
-	PPV_DETAILS("/ppvdetails"),
+	NEXT_PPV_CARD("/nextppvcard"),
 	TITLE_HOLDERS("/titles");
 	
 	private String cmdPath;

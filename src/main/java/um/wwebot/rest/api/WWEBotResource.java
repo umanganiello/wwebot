@@ -20,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import um.wwebot.model.Champion;
 import um.wwebot.model.Event;
 import um.wwebot.model.IncomingMessage;
+import um.wwebot.model.Match;
 import um.wwebot.model.OutgoingMessage;
 import um.wwebot.model.WWEBotCommand;
 import um.wwebot.parser.WWEBotParser;
@@ -44,6 +45,7 @@ public class WWEBotResource {
 	private final String championsWikipediaPage = "List_of_current_champions_in_WWE";
 	private final String eventsWikipediaPage = "List_of_WWE_pay-per-view_and_WWE_Network_events";
 	private final String upcomingEventsWikipediaSectionNumber = "41";
+	private final String nextEventMatchesWikipediaSectionNumber = "4";
 	
 	public WWEBotResource(){
 		showsSections = new LinkedList<>();
@@ -99,6 +101,7 @@ public class WWEBotResource {
 		}
 		
 		StringBuilder sb;
+		String upcomingEventsHTML;
 		
 		switch(cmd) {
 		case CHAMPIONS:
@@ -123,14 +126,30 @@ public class WWEBotResource {
 			log.info("Recognized command {}", WWEBotCommand.NEXT_PPV.getCmdPath());
 			sb = new StringBuilder();
 			
-			String upcomingEventsHTML = wikipediaClient.getSection(eventsWikipediaPage, upcomingEventsWikipediaSectionNumber);
+			upcomingEventsHTML = wikipediaClient.getSection(eventsWikipediaPage, upcomingEventsWikipediaSectionNumber);
 			List<Event> nextEvents = parser.getNextEventsFromSection(upcomingEventsHTML, 1);
 			
 			nextEvents.forEach(e -> {
 				sb.append("\n")
-				.append(e)
-				.append(" /ppvdetails");
-//				.append("\n");
+				.append(e.toBotString())
+				.append(" ")
+				.append(WWEBotCommand.NEXT_PPV_CARD.getCmdPath());
+			});
+			
+			response.setText(sb.toString());
+			break;
+		case NEXT_PPV_CARD:
+			log.info("Recognized command {}", WWEBotCommand.NEXT_PPV_CARD.getCmdPath());
+			upcomingEventsHTML = wikipediaClient.getSection(eventsWikipediaPage, upcomingEventsWikipediaSectionNumber);
+			Event nextEvent = parser.getNextEventsFromSection(upcomingEventsHTML, 1).get(0);
+			String nextEventMatchesHTML = wikipediaClient.getSection(nextEvent.getPageUrl(), nextEventMatchesWikipediaSectionNumber);
+			List<Match> nextEventMatches = parser.getMatchesFromEventSection(nextEventMatchesHTML);
+			
+			sb = new StringBuilder();
+			
+			nextEventMatches.forEach(m -> {
+				sb.append("\n")
+				.append(m.toBotString());
 			});
 			
 			response.setText(sb.toString());

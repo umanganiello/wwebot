@@ -4,18 +4,29 @@ import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 @Getter
 @Setter
 @EqualsAndHashCode
 @AllArgsConstructor
+@ToString
 public class Event {
 	private String name;
 	private String date;
 	private String venue;
 	private String location;
+	private String pageUrl;
 	
-	public String toString() {
-		return name + ": " + date + " @ " + venue + " - " + location;
+	public String toBotString() {
+		return new 	StringBuilder()
+					.append(name)
+					.append(": ")
+					.append(date)
+					.append(" @ ")
+					.append(venue)
+					.append(" - ")
+					.append(location)
+					.toString();
 	}
 }

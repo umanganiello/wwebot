@@ -4,6 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -22,6 +23,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import um.wwebot.model.Champion;
 import um.wwebot.model.Event;
+import um.wwebot.model.Match;
 
 @Slf4j
 @Component
@@ -156,11 +158,23 @@ public class XPathParser implements WWEBotParser{
   
             XPathExpression eventLocationExpr = xpath.compile(nextEventLineBaseXPathExpr+"/td[count(preceding-sibling::*) = 3]/a/text()");
             String eventLocation = (String) eventLocationExpr.evaluate(doc, XPathConstants.STRING);
-
-            log.debug("Found event date={} name={} venue={} location={}", eventDate, eventName, eventVenue, eventLocation);
-            nextEventsList.add(new Event(eventName, eventDate, eventVenue, eventLocation));
+            
+            XPathExpression eventPageUrlExpr = xpath.compile(nextEventLineBaseXPathExpr+"/td[count(preceding-sibling::*) = 1]/a/@href");
+            String eventPageUrl = (String) eventPageUrlExpr.evaluate(doc, XPathConstants.STRING);
+            eventPageUrl = eventPageUrl.substring(6); //Remove '/wiki/'
+            
+            Event e = new Event(eventName, eventDate, eventVenue, eventLocation, eventPageUrl);
+            log.debug("Found event{}", e);
+            nextEventsList.add(e);
         }
         
         return nextEventsList;
+	}
+
+	@Override
+	public List<Match> getMatchesFromEventSection(String section) {
+		log.debug("Parsing next event matches section: \n{}", section);
+		//TODO parse matches section
+		return Arrays.asList(new Match("Participants", "Stipulation"));
 	}
 }
