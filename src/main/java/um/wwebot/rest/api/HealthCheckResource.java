@@ -14,7 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 public class HealthCheckResource {
 
 	public HealthCheckResource(){
-     log.info("HealthCheck resource started");     
+//     log.info("HealthCheck resource started");     
   }
 
   @GET
