@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -119,8 +120,9 @@ public class XPathParser implements WWEBotParser{
         }
         
         if(foundNames.size() > 1) {
-        	log.error("Too many elements found for expr:'{}', expected=1, found={}", xpathExpr, foundNames.size());
-        	throw new IllegalStateException("Too many elements found for expr:"+xpathExpr+". Found "+foundNames.size()+" elements");
+        	return foundNames.stream().collect(Collectors.joining(" and "));
+//        	log.error("Too many elements found for expr:'{}', expected=1, found={}", xpathExpr, foundNames.size());
+//        	throw new IllegalStateException("Too many elements found for expr:"+xpathExpr+". Found "+foundNames.size()+" elements");
         }
         	
     	return foundNames.get(0);
