@@ -17,4 +17,5 @@ import lombok.ToString;
 public class OutgoingMessage {
 	private String text;
 	private String chat_id;
+	private String parse_mode;
 }

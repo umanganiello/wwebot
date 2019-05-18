@@ -12,12 +12,16 @@ import lombok.ToString;
 @AllArgsConstructor
 @ToString
 public class Match {
+	private int matchPositionInCard;
 	private String participants;
 	private String stipulation;
 	
 	public String toBotString() {
 		return	new StringBuilder()
+				.append(matchPositionInCard)
+				.append(". *")
 				.append(stipulation)
+				.append("*")
 				.append("\n")
 				.append(participants)
 				.toString();

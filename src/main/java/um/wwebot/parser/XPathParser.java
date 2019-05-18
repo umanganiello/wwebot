@@ -174,9 +174,40 @@ public class XPathParser implements WWEBotParser{
 	}
 
 	@Override
+	@SneakyThrows
 	public List<Match> getMatchesFromEventSection(String section) {
 		log.debug("Parsing next event matches section: \n{}", section);
-		//TODO parse matches section
-		return Arrays.asList(new Match("Participants", "Stipulation"));
+
+		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        factory.setNamespaceAware(true); 
+        DocumentBuilder builder = factory.newDocumentBuilder();
+        InputStream is = new ByteArrayInputStream(section.getBytes(StandardCharsets.UTF_8));
+        Document doc = builder.parse(is);
+        is.close();
+ 
+        XPathFactory xpathfactory = XPathFactory.newInstance();
+        XPath xpath = xpathfactory.newXPath();
+        
+        /* Matches */
+        /* XPath: /div/table/tbody/tr*/
+        XPathExpression matchesExpr = xpath.compile("/div/table/tbody/tr");
+        Object matchesResult = matchesExpr.evaluate(doc, XPathConstants.NODESET);
+        NodeList matchesNodes = (NodeList) matchesResult; //matches rows
+        
+        List<Match> matches = new ArrayList<>();
+        
+        for (int i=1; i<matchesNodes.getLength()-1; i++){ //avoids header row and last row
+        	String participants = matchesNodes.item(i).getChildNodes().item(3).getTextContent(); //tr/td[3]
+        	String stipulation = matchesNodes.item(i).getChildNodes().item(5).getTextContent();  //tr/td[5]
+        	
+        	int supStartIndex = stipulation.indexOf("[");
+        	if(supStartIndex != -1)
+        		stipulation = stipulation.substring(0, stipulation.indexOf("[")); //Removing the <sup>
+        	
+        	log.debug("Match found: {} {}", stipulation ,participants);
+        	matches.add(new Match(i, participants, stipulation));
+        }
+        
+		return matches;
 	}
 }

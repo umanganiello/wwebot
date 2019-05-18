@@ -17,6 +17,7 @@ public class TelegramClient {
 	public void sendMessage(OutgoingMessage msgToSend) {
 		log.info("Sending message to {}", msgToSend.getChat_id());
 		RestTemplate restTemplate = new RestTemplate();
+		msgToSend.setParse_mode("Markdown");
         restTemplate.postForLocation("https://api.telegram.org/bot"+botToken+"/sendMessage", msgToSend);
         log.info("Message sent to {}", msgToSend.getChat_id());
 	}
