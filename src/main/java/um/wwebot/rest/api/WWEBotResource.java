@@ -84,8 +84,9 @@ public class WWEBotResource {
 			return Response.ok().build();
 		}
 		catch(RuntimeException e) {
-			log.error("Error processing message", e);
-			return Response.serverError().entity(e.getMessage()).build();
+			log.error("Error processing update: {} \n Error:\n", update, e);
+			return Response.ok().build();
+//			return Response.serverError().entity(e.getMessage()).build();
 		}
 	}
 
