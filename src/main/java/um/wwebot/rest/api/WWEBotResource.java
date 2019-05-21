@@ -114,9 +114,9 @@ public class WWEBotResource {
 				String sectionHTML = wikipediaClient.getSection(championsWikipediaPage, s.getRight());
 				List<Champion> champions = parser.getChampionsFromSection(sectionHTML, s.getLeft());
 				
-				sb.append("\n")
+				sb.append("\n*")
 				.append(s.getLeft())
-				.append("\n")
+				.append("*\n")
 				.append(champions.stream().map(Champion::toString).collect(Collectors.joining("\n")))
 				.append("\n");
 			});

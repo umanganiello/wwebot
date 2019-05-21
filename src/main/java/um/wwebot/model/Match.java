@@ -17,7 +17,7 @@ public class Match {
 	private String stipulation;
 	
 	public String toBotString() {
-		return	new StringBuilder()
+		return new StringBuilder()
 				.append(matchPositionInCard)
 				.append(". *")
 				.append(stipulation)
