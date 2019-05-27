@@ -20,7 +20,9 @@ public class Event {
 	
 	public String toBotString() {
 		return new 	StringBuilder()
+					.append("*")
 					.append(name)
+					.append("*")
 					.append(": ")
 					.append(date)
 					.append(" @ ")
