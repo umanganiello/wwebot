@@ -163,6 +163,7 @@ public class XPathParser implements WWEBotParser{
             
             XPathExpression eventPageUrlExpr = xpath.compile(nextEventLineBaseXPathExpr+"/td[count(preceding-sibling::*) = 1]/a/@href");
             String eventPageUrl = (String) eventPageUrlExpr.evaluate(doc, XPathConstants.STRING);
+            log.debug("Event url={}", eventPageUrl);
             eventPageUrl = eventPageUrl.substring(6); //Remove '/wiki/'
             
             Event e = new Event(eventName, eventDate, eventVenue, eventLocation, eventPageUrl);
