@@ -149,8 +149,7 @@ public class XPathParser implements WWEBotParser{
         for(int i=1; i<=noOfEventsToFetch; i++) {
         	nextEventLineBaseXPathExpr = "/div/table[count(preceding-sibling::*) = 3]/tbody/tr[count(preceding-sibling::*) = "+i+"]";
         	
-            XPathExpression eventDateExpr = xpath.compile(nextEventLineBaseXPathExpr+"/td[count(preceding-sibling::*) = 0]/span/text()");
-            String eventDate = (String) eventDateExpr.evaluate(doc, XPathConstants.STRING);
+        	String eventDate = getEventDateByCase(nextEventLineBaseXPathExpr, xpath, doc);
             
             XPathExpression eventNameExpr = xpath.compile(nextEventLineBaseXPathExpr+"/td[count(preceding-sibling::*) = 1]/a/text()");
             String eventName = (String) eventNameExpr.evaluate(doc, XPathConstants.STRING);
@@ -172,6 +171,20 @@ public class XPathParser implements WWEBotParser{
         }
         
         return nextEventsList;
+	}
+
+	@SneakyThrows
+	private String getEventDateByCase(String nextEventLineBaseXPathExpr, XPath xpath, Document doc) {
+		XPathExpression eventDateExpr = xpath.compile(nextEventLineBaseXPathExpr+"/td[count(preceding-sibling::*) = 0]/span/text()");
+        String eventDate = (String) eventDateExpr.evaluate(doc, XPathConstants.STRING);
+        
+        if(eventDate == null || eventDate.isEmpty()) { //no span
+        	eventDateExpr = xpath.compile(nextEventLineBaseXPathExpr+"/td[count(preceding-sibling::*) = 0]/text()");
+            eventDate = (String) eventDateExpr.evaluate(doc, XPathConstants.STRING);
+            eventDate = eventDate.trim();
+        }
+        
+        return eventDate;
 	}
 
 	@Override
