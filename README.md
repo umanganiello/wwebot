@@ -1,2 +1,2 @@
 # wwebot
-Telegram webhook bot that provides information about WWE next events, title holders and more.
+Telegram (webhook) bot providing information about WWE next events, title holders and more.
