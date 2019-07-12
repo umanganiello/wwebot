@@ -23,7 +23,7 @@ public class Event {
 					.append("*")
 					.append(name)
 					.append("*")
-					.append(": ")
+					.append("\n")
 					.append(date)
 					.append(" @ ")
 					.append(venue)
