@@ -42,10 +42,11 @@ public class WWEBotResource {
 	
 	private final List<Pair<String, String>> showsSections; //Wikipedia page section ids for each roster table
 
-	private final String championsWikipediaPage = "List_of_current_champions_in_WWE";
-	private final String eventsWikipediaPage = "List_of_WWE_pay-per-view_and_WWE_Network_events";
-	private final String upcomingEventsWikipediaSectionNumber = "41";
-	private final String nextEventMatchesWikipediaSectionNumber = "4";
+	private final String WIKIPEDIA_PAGE_CHAMPIONS = "List_of_current_champions_in_WWE";
+	private final String WIKIPEDIA_PAGE_EVENTS = "List_of_WWE_pay-per-view_and_WWE_Network_events";
+	private final String WIKIPEDIA_SECTION_NR_UPCOMING_EVENTS = "41";
+	private final String WIKIPEDIA_SECTION_NR_NEXT_EVENT_MATCHES = "4";
+	private final String WIKIPEDIA_SECTION_NR_NEXT_EVENT_MATCHES_ALT = "2";
 	
 	public WWEBotResource(){
 		showsSections = new LinkedList<>();
@@ -111,7 +112,7 @@ public class WWEBotResource {
 			
 			//TODO: Optimization: single API call
 			showsSections.forEach(s -> {
-				String sectionHTML = wikipediaClient.getSection(championsWikipediaPage, s.getRight());
+				String sectionHTML = wikipediaClient.getSection(WIKIPEDIA_PAGE_CHAMPIONS, s.getRight());
 				List<Champion> champions = parser.getChampionsFromSection(sectionHTML, s.getLeft());
 				
 				sb.append("\n*")
@@ -127,7 +128,7 @@ public class WWEBotResource {
 			log.info("Recognized command {}", WWEBotCommand.NEXT_PPV.getCmdPath());
 			sb = new StringBuilder();
 			
-			upcomingEventsHTML = wikipediaClient.getSection(eventsWikipediaPage, upcomingEventsWikipediaSectionNumber);
+			upcomingEventsHTML = wikipediaClient.getSection(WIKIPEDIA_PAGE_EVENTS, WIKIPEDIA_SECTION_NR_UPCOMING_EVENTS);
 			List<Event> nextEvents = parser.getNextEventsFromSection(upcomingEventsHTML, 1);
 			
 			nextEvents.forEach(e -> {
@@ -141,9 +142,18 @@ public class WWEBotResource {
 			break;
 		case NEXT_PPV_CARD:
 			log.info("Recognized command {}", WWEBotCommand.NEXT_PPV_CARD.getCmdPath());
-			upcomingEventsHTML = wikipediaClient.getSection(eventsWikipediaPage, upcomingEventsWikipediaSectionNumber);
+			upcomingEventsHTML = wikipediaClient.getSection(WIKIPEDIA_PAGE_EVENTS, WIKIPEDIA_SECTION_NR_UPCOMING_EVENTS);
 			Event nextEvent = parser.getNextEventsFromSection(upcomingEventsHTML, 1).get(0);
-			String nextEventMatchesHTML = wikipediaClient.getSection(nextEvent.getPageUrl(), nextEventMatchesWikipediaSectionNumber);
+			
+			String nextEventMatchesHTML;
+			try {
+				nextEventMatchesHTML = wikipediaClient.getSection(nextEvent.getPageUrl(), WIKIPEDIA_SECTION_NR_NEXT_EVENT_MATCHES);
+			}
+			catch(Exception e) {
+				log.info("NEXT_PPV_CARD section not found with id={}, trying with alternative id={}", WIKIPEDIA_SECTION_NR_NEXT_EVENT_MATCHES, WIKIPEDIA_SECTION_NR_NEXT_EVENT_MATCHES_ALT);
+				nextEventMatchesHTML = wikipediaClient.getSection(nextEvent.getPageUrl(), WIKIPEDIA_SECTION_NR_NEXT_EVENT_MATCHES_ALT);
+			}
+			
 			List<Match> nextEventMatches = parser.getMatchesFromEventSection(nextEventMatchesHTML);
 			
 			sb = new StringBuilder();
