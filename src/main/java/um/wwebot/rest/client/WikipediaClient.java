@@ -15,7 +15,12 @@ import lombok.extern.slf4j.Slf4j;
 public class WikipediaClient {
 	
 	private String allSectionAPI = "https://en.wikipedia.org/w/api.php?action=parse&prop=sections&page=<pageName>";
-	private String specificSectionAPI = "https://en.wikipedia.org/w/api.php?action=parse&prop=text&section=<sectionNumber>&page=<pageName>&format=json";
+	
+	/*
+	 *  If <pageName> is a redirect to the actual page (e.g. https://en.wikipedia.org/w/index.php?title=Smackville&redirect=no), using redirects=true the API is called on the actual page
+	 *  Therefore the section is parsed on the real page and not the redirect one 
+	 */
+	private String specificSectionAPI = "https://en.wikipedia.org/w/api.php?action=parse&prop=text&section=<sectionNumber>&page=<pageName>&format=json&redirects=true";
 
 	public String getSection(String pageName, String sectionNumber) {
 		log.info("Retrieving section {} of page {} from Wikipedia API", sectionNumber, pageName);
